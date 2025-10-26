@@ -5,7 +5,7 @@ const replySchema = new mongoose.Schema({
   delete_password: { type: String, required: true },
   created_on: { type: Date, default: Date.now },
   reported: { type: Boolean, default: false }
-});
+}, { _id: true }); // Ensure _id is generated
 
 const threadSchema = new mongoose.Schema({
   board: { type: String, required: true },
@@ -15,8 +15,9 @@ const threadSchema = new mongoose.Schema({
   bumped_on: { type: Date, default: Date.now },
   reported: { type: Boolean, default: false },
   replies: [replySchema]
-});
+}, { _id: true }); // Ensure _id is generated
 
+// Update bumped_on when saving
 threadSchema.pre('save', function(next) {
   this.bumped_on = Date.now();
   next();

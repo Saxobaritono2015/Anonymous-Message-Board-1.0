@@ -15,12 +15,20 @@ connectDB();
 
 const app = express();
 
-// Security middleware
+// Security middleware - Configured for FreeCodeCamp tests
 app.use(helmet({
-  frameguard: { action: 'sameorigin' },  // Only allow your site to be loaded in an iFrame on your own pages
-  dnsPrefetchControl: { allow: false },   // Do not allow DNS prefetching
+  frameguard: { action: 'sameorigin' },     // Only allow your site to be loaded in an iFrame on your own pages
+  dnsPrefetchControl: { allow: false },      // Do not allow DNS prefetching  
   referrerPolicy: { policy: 'same-origin' } // Only allow your site to send the referrer for your own pages
 }));
+
+// Additional security headers for FreeCodeCamp requirements
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  res.setHeader('Referrer-Policy', 'same-origin');
+  next();
+});
 
 app.use('/public', express.static(process.cwd() + '/public'));
 

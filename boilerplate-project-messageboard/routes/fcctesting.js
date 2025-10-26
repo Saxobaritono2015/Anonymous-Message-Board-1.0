@@ -73,7 +73,14 @@ module.exports = function (app) {
     });
   });
   app.get('/_api/app-info', function(req, res) {
-    res.json({ headers: res.getHeaders()});
+    res.json({ 
+      headers: res.getHeaders(),
+      security: {
+        'X-Frame-Options': res.getHeader('X-Frame-Options'),
+        'X-DNS-Prefetch-Control': res.getHeader('X-DNS-Prefetch-Control'),
+        'Referrer-Policy': res.getHeader('Referrer-Policy')
+      }
+    });
   });
   
 };

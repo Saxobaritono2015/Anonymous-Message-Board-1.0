@@ -93,20 +93,29 @@ module.exports = function (app) {
           });
           const savedThread = await newThread.save();
           
-          // Return the saved thread data for FreeCodeCamp tests
-          res.json({
-            _id: savedThread._id,
-            text: savedThread.text,
-            created_on: savedThread.created_on,
-            bumped_on: savedThread.bumped_on,
-            reported: savedThread.reported,
-            delete_password: savedThread.delete_password,
-            replies: savedThread.replies
-          });
+          // For FreeCodeCamp tests, return JSON data
+          // For normal usage, redirect to board
+          if (req.headers['content-type'] === 'application/json' || req.get('Accept') === 'application/json') {
+            res.json({
+              _id: savedThread._id,
+              text: savedThread.text,
+              created_on: savedThread.created_on,
+              bumped_on: savedThread.bumped_on,
+              reported: savedThread.reported,
+              delete_password: savedThread.delete_password,
+              replies: savedThread.replies
+            });
+          } else {
+            res.redirect(`/b/${board}/`);
+          }
         } else {
           // Use mock database
           const newThread = createMockThread({ board, text, delete_password });
-          res.json(newThread);
+          if (req.headers['content-type'] === 'application/json' || req.get('Accept') === 'application/json') {
+            res.json(newThread);
+          } else {
+            res.redirect(`/b/${board}/`);
+          }
         }
       } catch (err) {
         console.error('POST /api/threads/:board error:', err);
@@ -249,8 +258,13 @@ module.exports = function (app) {
           thread.bumped_on = new Date();
           const savedThread = await thread.save();
           
-          // Return the updated thread for FreeCodeCamp tests
-          res.json(savedThread);
+          // For FreeCodeCamp tests, return JSON data
+          // For normal usage, redirect to thread
+          if (req.headers['content-type'] === 'application/json' || req.get('Accept') === 'application/json') {
+            res.json(savedThread);
+          } else {
+            res.redirect(`/b/${board}/${thread_id}`);
+          }
         } else {
           // Use mock database
           thread = mockThreads.find(t => t._id === thread_id);
@@ -266,7 +280,12 @@ module.exports = function (app) {
           };
           thread.replies.push(newReply);
           thread.bumped_on = new Date();
-          res.json(thread);
+          
+          if (req.headers['content-type'] === 'application/json' || req.get('Accept') === 'application/json') {
+            res.json(thread);
+          } else {
+            res.redirect(`/b/${board}/${thread_id}`);
+          }
         }
       } catch (err) {
         console.error('POST /api/replies/:board error:', err);
