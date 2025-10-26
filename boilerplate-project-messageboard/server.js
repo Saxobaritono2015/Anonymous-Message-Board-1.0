@@ -17,10 +17,9 @@ const app = express();
 
 // Security middleware
 app.use(helmet({
-  noSniff: true,
-  xssFilter: true,
-  noCache: true,
-  hidePoweredBy: { setTo: 'PHP 4.2.0' }
+  frameguard: { action: 'sameorigin' },  // Only allow your site to be loaded in an iFrame on your own pages
+  dnsPrefetchControl: { allow: false },   // Do not allow DNS prefetching
+  referrerPolicy: { policy: 'same-origin' } // Only allow your site to send the referrer for your own pages
 }));
 
 app.use('/public', express.static(process.cwd() + '/public'));

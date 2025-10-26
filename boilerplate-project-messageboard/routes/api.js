@@ -91,13 +91,23 @@ module.exports = function (app) {
             delete_password,
             replies: []
           });
-          await newThread.save();
+          const savedThread = await newThread.save();
+          
+          // Return the saved thread data for FreeCodeCamp tests
+          res.json({
+            _id: savedThread._id,
+            text: savedThread.text,
+            created_on: savedThread.created_on,
+            bumped_on: savedThread.bumped_on,
+            reported: savedThread.reported,
+            delete_password: savedThread.delete_password,
+            replies: savedThread.replies
+          });
         } else {
           // Use mock database
-          createMockThread({ board, text, delete_password });
+          const newThread = createMockThread({ board, text, delete_password });
+          res.json(newThread);
         }
-
-        res.redirect(`/b/${board}/`);
       } catch (err) {
         console.error('POST /api/threads/:board error:', err);
         res.status(500).json({ error: 'Server error' });
@@ -237,7 +247,10 @@ module.exports = function (app) {
           };
           thread.replies.push(newReply);
           thread.bumped_on = new Date();
-          await thread.save();
+          const savedThread = await thread.save();
+          
+          // Return the updated thread for FreeCodeCamp tests
+          res.json(savedThread);
         } else {
           // Use mock database
           thread = mockThreads.find(t => t._id === thread_id);
@@ -253,9 +266,8 @@ module.exports = function (app) {
           };
           thread.replies.push(newReply);
           thread.bumped_on = new Date();
+          res.json(thread);
         }
-
-        res.redirect(`/b/${board}/${thread_id}`);
       } catch (err) {
         console.error('POST /api/replies/:board error:', err);
         res.status(500).json({ error: 'Server error' });

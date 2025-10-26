@@ -25,6 +25,9 @@ suite('Functional Tests', function() {
           })
           .end(function(err, res) {
             assert.equal(res.status, 200);
+            if (res.body && res.body._id) {
+              testThreadId = res.body._id;
+            }
             done();
           });
       });
@@ -50,7 +53,9 @@ suite('Functional Tests', function() {
               assert.notProperty(thread, 'delete_password');
               assert.notProperty(thread, 'reported');
               
-              testThreadId = thread._id;
+              if (!testThreadId) {
+                testThreadId = thread._id;
+              }
               
               assert.isArray(thread.replies);
               assert.isAtMost(thread.replies.length, 3);
@@ -93,27 +98,44 @@ suite('Functional Tests', function() {
             delete_password: testPassword
           })
           .end(function(err, res) {
-            // Get the thread ID from the created thread
-            chai.request(server)
-              .get(`/api/threads/${testBoard}`)
-              .end(function(err, res) {
-                const threadToDelete = res.body.find(t => t.text === 'Thread to delete');
-                if (threadToDelete) {
-                  chai.request(server)
-                    .delete(`/api/threads/${testBoard}`)
-                    .send({
-                      thread_id: threadToDelete._id,
-                      delete_password: testPassword
-                    })
-                    .end(function(err, res) {
-                      assert.equal(res.status, 200);
-                      assert.equal(res.text, 'success');
-                      done();
-                    });
-                } else {
+            let threadToDeleteId;
+            if (res.body && res.body._id) {
+              threadToDeleteId = res.body._id;
+              // Now delete it
+              chai.request(server)
+                .delete(`/api/threads/${testBoard}`)
+                .send({
+                  thread_id: threadToDeleteId,
+                  delete_password: testPassword
+                })
+                .end(function(err, res) {
+                  assert.equal(res.status, 200);
+                  assert.equal(res.text, 'success');
                   done();
-                }
-              });
+                });
+            } else {
+              // Fallback: get threads and find one to delete
+              chai.request(server)
+                .get(`/api/threads/${testBoard}`)
+                .end(function(err, res) {
+                  const threadToDelete = res.body.find(t => t.text === 'Thread to delete');
+                  if (threadToDelete) {
+                    chai.request(server)
+                      .delete(`/api/threads/${testBoard}`)
+                      .send({
+                        thread_id: threadToDelete._id,
+                        delete_password: testPassword
+                      })
+                      .end(function(err, res) {
+                        assert.equal(res.status, 200);
+                        assert.equal(res.text, 'success');
+                        done();
+                      });
+                  } else {
+                    done();
+                  }
+                });
+            }
           });
       });
     });
